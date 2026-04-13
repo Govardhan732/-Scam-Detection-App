@@ -1,32 +1,62 @@
 async function checkScam() {
   const text = document.getElementById("inputText").value;
 
-  const res = await fetch("http://localhost:5000/api/detect-scam", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ text })
-  });
+  if (!text.trim()) {
+    alert("Please enter a message");
+    return;
+  }
 
-  const data = await res.json();
+  try {
+    const res = await fetch("https://scam-backend-2bse.onrender.com/api/detect-scam", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ text })
+    });
 
-  document.getElementById("resultBox").classList.remove("hidden");
+    const data = await res.json();
 
-  document.getElementById("risk").innerText = `Risk: ${data.risk}`;
-  document.getElementById("score").innerText = `Score: ${data.score}/100`;
-  document.getElementById("category").innerText = `Category: ${data.category}`;
+    document.getElementById("resultBox").classList.remove("hidden");
 
-  const reasonsList = document.getElementById("reasons");
-  reasonsList.innerHTML = "";
-  data.reasons.forEach(r => {
-    const li = document.createElement("li");
-    li.innerText = r;
-    reasonsList.appendChild(li);
-  });
+    // ✅ Risk with icons
+    let riskText = "";
+    let color = "";
 
-  drawChart(data.scamPercent, data.safePercent);
-  saveHistory(text, data.risk);
+    if (data.risk === "Low") {
+      riskText = "✔ Safe Message (Low Risk)";
+      color = "green";
+    } else if (data.risk === "Medium") {
+      riskText = "⚠ Medium Risk";
+      color = "orange";
+    } else {
+      riskText = "❌ High Risk";
+      color = "red";
+    }
+
+    const riskElement = document.getElementById("risk");
+    riskElement.innerText = riskText;
+    riskElement.style.color = color;
+
+    document.getElementById("score").innerText = `Score: ${data.score}/100`;
+    document.getElementById("category").innerText = `Category: ${data.category}`;
+
+    // Reasons
+    const reasonsList = document.getElementById("reasons");
+    reasonsList.innerHTML = "";
+    data.reasons.forEach(r => {
+      const li = document.createElement("li");
+      li.innerText = r;
+      reasonsList.appendChild(li);
+    });
+
+    drawChart(data.scamPercent, data.safePercent);
+    saveHistory(text, data.risk);
+
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong. Try again.");
+  }
 }
 
 function drawChart(scam, safe) {
@@ -52,7 +82,13 @@ function drawChart(scam, safe) {
 
 function saveHistory(text, risk) {
   let history = JSON.parse(localStorage.getItem("history")) || [];
-  history.push({ text, risk });
+
+  history.push({
+    text,
+    risk,
+    time: new Date().toLocaleString()
+  });
+
   localStorage.setItem("history", JSON.stringify(history));
   displayHistory();
 }
@@ -60,11 +96,12 @@ function saveHistory(text, risk) {
 function displayHistory() {
   const history = JSON.parse(localStorage.getItem("history")) || [];
   const list = document.getElementById("historyList");
+
   list.innerHTML = "";
 
   history.forEach(item => {
     const li = document.createElement("li");
-    li.innerText = `${item.text} → ${item.risk}`;
+    li.innerText = `${item.text} → ${item.risk} (${item.time})`;
     list.appendChild(li);
   });
 }
