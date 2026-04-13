@@ -1,0 +1,34 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scam Detection System</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h1>AI Scam Detection</h1>
+
+  <textarea id="inputText" placeholder="Enter message..."></textarea>
+  <button onclick="checkScam()">Analyze</button>
+
+  <div id="resultBox" class="hidden">
+    <h2 id="risk"></h2>
+    <p id="score"></p>
+    <p id="category"></p>
+
+    <ul id="reasons"></ul>
+
+    <canvas id="chart" width="200" height="200"></canvas>
+  </div>
+
+  <div id="history">
+    <h3>History</h3>
+    <ul id="historyList"></ul>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
